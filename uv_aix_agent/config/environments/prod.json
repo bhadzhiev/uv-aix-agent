@@ -1,0 +1,25 @@
+{
+  "environment": "production",
+  "debug": false,
+  "verbose_logging": false,
+  "tool_settings": {
+    "bash_executor": {
+      "timeout_seconds": 60,
+      "max_retries": 1,
+      "debug_commands": false
+    },
+    "file_analyzer": {
+      "max_file_size_mb": 10,
+      "cache_results": true
+    },
+    "llm_analyzer": {
+      "temperature": 0.2,
+      "max_tokens": 1500,
+      "model_fallback": false
+    }
+  },
+  "security": {
+    "allow_experimental_tools": false,
+    "strict_validation": true
+  }
+}

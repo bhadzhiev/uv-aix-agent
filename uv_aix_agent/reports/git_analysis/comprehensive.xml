@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report_definition>
+  <metadata>
+    <name>Git Comprehensive Report</name>
+    <version>1.0</version>
+    <description>Comprehensive Git repository analysis with metrics, activity, and insights - converted from legacy GitReportGenerator</description>
+    <author>UV AI Agent</author>
+    <inherit_global_tools>true</inherit_global_tools>
+    <output_format>xml</output_format>
+  </metadata>
+
+  <agent_configuration>
+    <prompt_template>
+      You are generating a comprehensive Git repository report. Use the available tools to:
+      1. Collect comprehensive git repository metrics and activity data
+      2. Calculate derived metrics for lifetime and recent activity
+      3. Generate structured insights including summary, risks, and improvements
+      4. Create a detailed analysis of repository health and development patterns
+      
+      Provide the output as a structured JSON object that conforms to the GitReport Pydantic schema, 
+      including all sections: general_repo_info, derived_lifetime_metrics, recent_7_day_activity, 
+      derived_recent_metrics, git_working_tree_status, and insights.
+    </prompt_template>
+    <max_iterations>3</max_iterations>
+    <temperature>0.3</temperature>
+    <response_format>structured</response_format>
+  </agent_configuration>
+
+  <data_collection>
+    <bash_commands>
+      <!-- Repository Basic Info -->
+      <command name="repo_name" tool="bash_executor">
+        git config --get remote.origin.url | sed 's/.*\///' | sed 's/\.git$//' || echo "unknown"
+      </command>
+      
+      <command name="current_branch" tool="bash_executor">
+        git rev-parse --abbrev-ref HEAD || echo "unknown"
+      </command>
+      
+      <command name="remote_url" tool="bash_executor">
+        git config --get remote.origin.url || echo "unknown"
+      </command>
+      
+      <!-- Commit and Date Info -->
+      <command name="first_commit_date" tool="bash_executor">
+        git log --reverse --format=%ad --date=format:%Y-%m-%d --max-count=1 || echo "unknown"
+      </command>
+      
+      <command name="latest_commit_date" tool="bash_executor">
+        git log -1 --format=%ad --date=format:%Y-%m-%d || echo "unknown"
+      </command>
+      
+      <command name="total_commits" tool="bash_executor">
+        git rev-list --count HEAD || echo "0"
+      </command>
+      
+      <!-- Author and Branch Info -->
+      <command name="total_authors" tool="bash_executor">
+        git shortlog -sn --all | wc -l || echo "0"
+      </command>
+      
+      <command name="local_branches" tool="bash_executor">
+        git branch | wc -l || echo "0"
+      </command>
+      
+      <command name="remote_branches" tool="bash_executor">
+        git branch -r | wc -l || echo "0"
+      </command>
+      
+      <!-- Tags Info -->
+      <command name="total_tags" tool="bash_executor">
+        git tag | wc -l || echo "0"
+      </command>
+      
+      <command name="last_tag" tool="bash_executor">
+        git describe --tags --abbrev=0 2>/dev/null || echo "unknown"
+      </command>
+      
+      <!-- Merge Commits -->
+      <command name="merge_commits" tool="bash_executor">
+        git log --merges --oneline | wc -l || echo "0"
+      </command>
+      
+      <!-- Git Object and Size Info -->
+      <command name="git_objects_info" tool="bash_executor">
+        git count-objects -vH || echo "count: 0"
+      </command>
+      
+      <!-- Custom Hooks -->
+      <command name="custom_hooks" tool="bash_executor">
+        find .git/hooks -type f ! -name "*.sample" 2>/dev/null | wc -l || echo "0"
+      </command>
+      
+      <!-- 7-Day Activity Data -->
+      <command name="commits_7d" tool="bash_executor">
+        git rev-list --count --since="7 days ago" HEAD || echo "0"
+      </command>
+      
+      <command name="authors_7d" tool="bash_executor">
+        git shortlog -sn --since="7 days ago" | wc -l || echo "0"
+      </command>
+      
+      <command name="top_authors_7d" tool="bash_executor">
+        git shortlog -sn --since="7 days ago" | head -5 || echo "No recent authors"
+      </command>
+      
+      <command name="files_changed_7d" tool="bash_executor">
+        git log --since="7 days ago" --name-only --pretty=format: | sort -u | wc -l || echo "0"
+      </command>
+      
+      <command name="lines_stats_7d" tool="bash_executor">
+        git log --since="7 days ago" --stat --pretty=format: | grep -E "insertions|deletions" | tail -1 || echo "0 insertions(+), 0 deletions(-)"
+      </command>
+      
+      <command name="most_active_files_7d" tool="bash_executor">
+        git log --since="7 days ago" --name-only --pretty=format: | sort | uniq -c | sort -nr | head -5 || echo "No active files"
+      </command>
+      
+      <!-- Working Tree Status -->
+      <command name="working_tree_status" tool="bash_executor">
+        git status --porcelain | wc -l
+      </command>
+    </bash_commands>
+    
+    <file_analysis>
+      <analyze_files tool="file_analyzer" pattern="**/*.{py,js,ts,json,md}">
+        <check_for>repository_structure</check_for>
+        <max_files>20</max_files>
+      </analyze_files>
+    </file_analysis>
+  </data_collection>
+
+  <analysis_tasks>
+    <task name="git_data_collection" priority="critical">
+      <description>Collect all Git repository data and metrics using bash commands</description>
+      <tool_sequence>
+        <step tool="bash_executor" command="repo_name"/>
+        <step tool="bash_executor" command="current_branch"/>
+        <step tool="bash_executor" command="remote_url"/>
+        <step tool="bash_executor" command="first_commit_date"/>
+        <step tool="bash_executor" command="latest_commit_date"/>
+        <step tool="bash_executor" command="total_commits"/>
+        <step tool="bash_executor" command="total_authors"/>
+        <step tool="bash_executor" command="local_branches"/>
+        <step tool="bash_executor" command="remote_branches"/>
+        <step tool="bash_executor" command="total_tags"/>
+        <step tool="bash_executor" command="last_tag"/>
+        <step tool="bash_executor" command="merge_commits"/>
+        <step tool="bash_executor" command="git_objects_info"/>
+        <step tool="bash_executor" command="custom_hooks"/>
+        <step tool="bash_executor" command="commits_7d"/>
+        <step tool="bash_executor" command="authors_7d"/>
+        <step tool="bash_executor" command="top_authors_7d"/>
+        <step tool="bash_executor" command="files_changed_7d"/>
+        <step tool="bash_executor" command="lines_stats_7d"/>
+        <step tool="bash_executor" command="most_active_files_7d"/>
+        <step tool="bash_executor" command="working_tree_status"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="repository_data" type="dict"/>
+        <field name="metrics_collected" type="boolean"/>
+      </output_schema>
+    </task>
+
+    <task name="calculate_derived_metrics" priority="high">
+      <description>Calculate derived metrics from collected Git data</description>
+      <calculations>
+        <metric name="commits_per_author" formula="total_commits / total_authors" default="0"/>
+        <metric name="repo_age_days" formula="days_between(first_commit_date, latest_commit_date)" default="0"/>
+        <metric name="merge_commit_ratio" formula="merge_commits / total_commits" default="0"/>
+        <metric name="commit_velocity" formula="commits_7d / 7" default="0"/>
+        <metric name="author_participation_rate" formula="authors_7d / total_authors" default="0"/>
+        <metric name="change_density" formula="files_changed_7d / commits_7d" default="0"/>
+      </calculations>
+      <output_schema>
+        <field name="lifetime_metrics" type="dict"/>
+        <field name="recent_metrics" type="dict"/>
+      </output_schema>
+    </task>
+
+    <task name="generate_warnings" priority="high">
+      <description>Generate contextual warnings based on repository analysis</description>
+      <warning_rules>
+        <warning id="bash_tool_unavailable" severity="high">
+          <conditions>
+            <condition type="has_errors">data_collection_errors</condition>
+            <condition type="empty">bash_command_results</condition>
+          </conditions>
+          <title>Limited bash tool availability affected data collection</title>
+          <description>The bash executor tool was not available or failed to execute commands properly</description>
+          <actions>
+            <action priority="high">Ensure bash executor tool is properly configured</action>
+            <action priority="medium">Verify Git repository access and permissions</action>
+            <action priority="low">Consider implementing fallback data collection methods</action>
+          </actions>
+        </warning>
+
+        <warning id="incomplete_metrics" severity="medium">
+          <conditions>
+            <condition type="has_null_values">raw_data</condition>
+          </conditions>
+          <title>Some metrics may be incomplete or unavailable</title>
+          <description>Data collection was partially successful but some metrics could not be calculated</description>
+          <actions>
+            <action priority="high">Review failed Git commands and fix underlying issues</action>
+            <action priority="medium">Validate repository structure and Git configuration</action>
+            <action priority="low">Enable debug logging for data collection process</action>
+          </actions>
+        </warning>
+
+        <warning id="low_commit_activity" severity="medium">
+          <conditions>
+            <condition type="less_than_or_equal" field="commits_7d" value="1"/>
+          </conditions>
+          <title>Low recent commit activity detected</title>
+          <description>Repository shows minimal commit activity in recent period</description>
+          <actions>
+            <action priority="medium">Review development workflow and encourage regular commits</action>
+            <action priority="low">Consider implementing automated commit reminders</action>
+          </actions>
+        </warning>
+
+        <warning id="single_contributor" severity="high">
+          <conditions>
+            <condition type="equals" field="total_authors" value="1"/>
+          </conditions>
+          <title>Repository has only one active contributor</title>
+          <description>All recent commits are from a single author, indicating potential bus factor risk</description>
+          <actions>
+            <action priority="high">Encourage code reviews and pair programming</action>
+            <action priority="high">Document critical system knowledge</action>
+            <action priority="medium">Consider bringing additional team members onto the project</action>
+          </actions>
+        </warning>
+
+        <warning id="high_commits_per_author" severity="low">
+          <conditions>
+            <condition type="greater_than" field="commits_per_author" value="100"/>
+          </conditions>
+          <title>High commits per author ratio</title>
+          <description>Average commits per author is unusually high, may indicate lack of contribution diversity</description>
+          <actions>
+            <action priority="medium">Review commit granularity and encourage atomic commits</action>
+            <action priority="low">Consider squashing related commits before merging</action>
+          </actions>
+        </warning>
+
+        <warning id="no_merge_commits" severity="low">
+          <conditions>
+            <condition type="equals" field="merge_commit_ratio" value="0"/>
+          </conditions>
+          <title>No merge commits detected</title>
+          <description>Repository appears to use linear history, which may indicate lack of feature branch workflow</description>
+          <actions>
+            <action priority="low">Consider implementing feature branch workflow</action>
+            <action priority="low">Evaluate benefits of merge vs rebase strategies</action>
+          </actions>
+        </warning>
+
+        <warning id="high_change_density" severity="medium">
+          <conditions>
+            <condition type="greater_than" field="change_density" value="10"/>
+          </conditions>
+          <title>High change density in recent commits</title>
+          <description>Recent commits show unusually high file change density</description>
+          <actions>
+            <action priority="medium">Review large commits for potential refactoring opportunities</action>
+            <action priority="low">Consider breaking large changes into smaller, focused commits</action>
+          </actions>
+        </warning>
+      </warning_rules>
+      <output_schema>
+        <field name="warnings" type="list"/>
+        <field name="warning_count" type="int"/>
+      </output_schema>
+    </task>
+
+    <task name="generate_comprehensive_report" priority="high">
+      <description>Generate a comprehensive Git repository report including general info, derived metrics, and recent activity using the GitReport Pydantic schema</description>
+      <tool_sequence>
+        <step tool="llm_analyzer" method="generate_structured_report"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="git_report" type="object"/>
+        <field name="report_sections" type="list"/>
+      </output_schema>
+    </task>
+
+    <task name="generate_insights" priority="high">
+      <description>Analyze the Git repository report data and provide summary, measurable risks, and actionable improvements</description>
+      <tool_sequence>
+        <step tool="llm_analyzer" method="analyze_insights"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="summary" type="list" max_items="5"/>
+        <field name="measurable_risks" type="list" max_items="10"/>
+        <field name="actionable_improvements" type="list" max_items="8"/>
+      </output_schema>
+    </task>
+  </analysis_tasks>
+
+  <output_format>
+    <format>xml</format>
+    <structure>
+      <root_element>git_comprehensive_report</root_element>
+      <sections>
+        <section name="metadata" include_timestamp="true"/>
+        <section name="repository_info"/>
+        <section name="lifetime_metrics"/>
+        <section name="recent_activity"/>
+        <section name="warnings">
+          <warning_structure>
+            <fields>
+              <field name="id"/>
+              <field name="severity"/>
+              <field name="title"/>
+              <field name="description"/>
+              <field name="actions">
+                <action_fields>
+                  <field name="priority"/>
+                  <field name="description"/>
+                </action_fields>
+              </field>
+            </fields>
+          </warning_structure>
+        </section>
+        <section name="working_tree_status"/>
+        <section name="insights"/>
+      </sections>
+    </structure>
+    <styling>
+      <pretty_print>true</pretty_print>
+    </styling>
+  </output_format>
+
+  <error_handling>
+    <timeout_seconds>300</timeout_seconds>
+    <bash_command_failures>
+      <on_timeout action="skip_and_note"/>
+      <on_permission_error action="log_and_continue"/>
+      <on_command_not_found action="suggest_alternative"/>
+    </bash_command_failures>
+    <tool_failures>
+      <on_missing_dependency action="use_fallback_tool"/>
+      <on_tool_crash action="continue_with_remaining_tools"/>
+    </tool_failures>
+    <fallback_output>
+      <message>Git report generation encountered errors. Partial results provided.</message>
+      <include_error_details>true</include_error_details>
+    </fallback_output>
+  </error_handling>
+
+  <tools scope="report">
+    <!-- Using only global tools for this report -->
+    <!-- The report leverages bash_executor, file_analyzer, and llm_analyzer from global tools -->
+  </tools>
+</report_definition>

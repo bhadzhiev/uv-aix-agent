@@ -1,0 +1,25 @@
+{
+  "environment": "development",
+  "debug": true,
+  "verbose_logging": true,
+  "tool_settings": {
+    "bash_executor": {
+      "timeout_seconds": 120,
+      "max_retries": 3,
+      "debug_commands": true
+    },
+    "file_analyzer": {
+      "max_file_size_mb": 20,
+      "cache_results": false
+    },
+    "llm_analyzer": {
+      "temperature": 0.3,
+      "max_tokens": 2000,
+      "model_fallback": true
+    }
+  },
+  "security": {
+    "allow_experimental_tools": true,
+    "strict_validation": false
+  }
+}

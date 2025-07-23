@@ -1,0 +1,9 @@
+[project]
+name = "uv_aix_agent"
+version = "0.1.0"
+description = "A simple AI agent project."
+authors = [{name = "Bozhidar", email = "b.g.bozhidar.georgiev@gmail.com"}]
+dependencies = ["llama_index"]
+
+[project.scripts]
+start = "uv_aix_agent.main:start"

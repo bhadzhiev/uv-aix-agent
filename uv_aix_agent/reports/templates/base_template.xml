@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report_definition>
+  <metadata>
+    <name>Base Report Template</name>
+    <version>1.0</version>
+    <description>Base template for creating new reports</description>
+    <author>UV AI Agent</author>
+    <inherit_global_tools>true</inherit_global_tools>
+    <output_format>xml</output_format>
+  </metadata>
+
+  <agent_configuration>
+    <prompt_template>
+      You are analyzing data for a report. Use the available tools to:
+      1. Collect relevant data
+      2. Analyze and process the information
+      3. Generate insights and recommendations
+      
+      Focus on providing actionable insights based on the data.
+    </prompt_template>
+    <max_iterations>3</max_iterations>
+    <temperature>0.3</temperature>
+    <response_format>structured</response_format>
+  </agent_configuration>
+
+  <data_collection>
+    <bash_commands>
+      <!-- Add bash commands for data collection -->
+    </bash_commands>
+    
+    <file_analysis>
+      <!-- Add file analysis configuration -->
+    </file_analysis>
+  </data_collection>
+
+  <analysis_tasks>
+    <task name="data_analysis" priority="high">
+      <description>Analyze collected data and generate insights</description>
+      <tool_sequence>
+        <step tool="llm_analyzer" method="analyze"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="results" type="dict"/>
+      </output_schema>
+    </task>
+  </analysis_tasks>
+
+  <output_format>
+    <format>xml</format>
+    <structure>
+      <root_element>report</root_element>
+      <sections>
+        <section name="metadata" include_timestamp="true"/>
+        <section name="analysis_results"/>
+      </sections>
+    </structure>
+    <styling>
+      <pretty_print>true</pretty_print>
+    </styling>
+  </output_format>
+
+  <error_handling>
+    <timeout_seconds>180</timeout_seconds>
+    <bash_command_failures>
+      <on_timeout action="skip_and_note"/>
+      <on_permission_error action="log_and_continue"/>
+    </bash_command_failures>
+  </error_handling>
+
+  <tools scope="report">
+    <!-- Add report-specific tools here -->
+  </tools>
+</report_definition>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<global_tools>
+  <metadata>
+    <version>1.0</version>
+    <description>Global tools available to all reports</description>
+  </metadata>
+
+  <tools>
+    <!-- Global Bash Command Tool -->
+    <tool name="bash_executor" scope="global" priority="high">
+      <class>BashCommandTool</class>
+      <description>Execute bash commands with safety restrictions</description>
+      <config>
+        <timeout_seconds>60</timeout_seconds>
+        <working_directory>auto_detect</working_directory>
+        <allowed_commands>
+          <command pattern="git .*" description="Git operations"/>
+          <command pattern="ls .*" description="List files"/>
+          <command pattern="find .*" description="Find files"/>
+          <command pattern="grep .*" description="Search in files"/>
+          <command pattern="wc .*" description="Word/line count"/>
+          <command pattern="cat .*" description="Display file contents"/>
+          <command pattern="head .*" description="Show file beginning"/>
+          <command pattern="tail .*" description="Show file end"/>
+          <command pattern="tree .*" description="Show directory tree"/>
+          <command pattern="du .*" description="Disk usage"/>
+          <command pattern="pwd" description="Show current directory"/>
+          <command pattern="whoami" description="Show current user"/>
+          <command pattern="date" description="Show current date"/>
+        </allowed_commands>
+        <blocked_commands>
+          <command pattern="rm .*" reason="File deletion not allowed"/>
+          <command pattern="sudo .*" reason="Elevated privileges not allowed"/>
+          <command pattern="chmod .*" reason="Permission changes not allowed"/>
+          <command pattern=".*>.*" reason="IO redirection not allowed"/>
+          <command pattern=".*&amp;.*" reason="Background processes not allowed"/>
+        </blocked_commands>
+      </config>
+      <error_handling>
+        <on_timeout action="kill_and_report"/>
+        <on_permission_denied action="log_and_continue"/>
+        <on_command_blocked action="suggest_alternative"/>
+      </error_handling>
+      <permissions>
+        <read_filesystem>true</read_filesystem>
+        <execute_commands>true</execute_commands>
+        <network_access>false</network_access>
+        <write_files>false</write_files>
+      </permissions>
+    </tool>
+
+    <!-- Global File System Tool -->
+    <tool name="file_analyzer" scope="global" priority="medium">
+      <class>FileSystemTool</class>
+      <description>Safe file system operations</description>
+      <config>
+        <max_file_size_mb>10</max_file_size_mb>
+        <allowed_extensions>[".py", ".js", ".ts", ".json", ".xml", ".md", ".txt", ".yml", ".yaml", ".toml", ".cfg", ".ini"]</allowed_extensions>
+      </config>
+      <permissions>
+        <read_files>true</read_files>
+        <write_files>false</write_files>
+      </permissions>
+    </tool>
+
+    <!-- Global LLM Analysis Tool -->
+    <tool name="llm_analyzer" scope="global" priority="high">
+      <class>LLMAnalysisTool</class>
+      <description>General purpose LLM analysis capabilities</description>
+      <config>
+        <max_context_tokens>4000</max_context_tokens>
+        <temperature>0.3</temperature>
+        <response_format>structured</response_format>
+      </config>
+    </tool>
+  </tools>
+</global_tools>

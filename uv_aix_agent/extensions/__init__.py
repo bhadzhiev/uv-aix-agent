@@ -1,0 +1,1 @@
+"""Plugin system for UV AI Agent extensions."""

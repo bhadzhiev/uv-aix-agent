@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report_definition>
+  <metadata>
+    <name>Basic Repository Analysis</name>
+    <version>1.0</version>
+    <description>Simple repository analysis demonstrating XML configuration system</description>
+    <author>UV AI Agent</author>
+    <inherit_global_tools>true</inherit_global_tools>
+    <output_format>xml</output_format>
+  </metadata>
+
+  <agent_configuration>
+    <prompt_template>
+      You are analyzing a software repository. Use the available tools to:
+      1. Gather basic repository information
+      2. Analyze file structure and contents
+      3. Provide insights about the codebase
+    </prompt_template>
+    <max_iterations>3</max_iterations>
+    <temperature>0.3</temperature>
+    <response_format>structured</response_format>
+  </agent_configuration>
+
+  <data_collection>
+    <bash_commands>
+      <command name="repo_status" tool="bash_executor">
+        git status --porcelain
+      </command>
+      <command name="file_counts" tool="bash_executor">
+        find . -type f -name "*.py" | wc -l
+      </command>
+      <command name="directory_structure" tool="bash_executor">
+        find . -type d -maxdepth 2 | head -10
+      </command>
+    </bash_commands>
+    
+    <file_analysis>
+      <analyze_files tool="file_analyzer" pattern="**/*.md">
+        <check_for>documentation</check_for>
+        <max_files>5</max_files>
+      </analyze_files>
+    </file_analysis>
+  </data_collection>
+
+  <analysis_tasks>
+    <task name="repository_overview" priority="high">
+      <description>Generate overview of repository structure and content</description>
+      <tool_sequence>
+        <step tool="bash_executor" command="repo_status"/>
+        <step tool="bash_executor" command="file_counts"/>
+        <step tool="bash_executor" command="directory_structure"/>
+        <step tool="llm_analyzer" method="analyze_overview"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="summary" type="list" max_items="5"/>
+        <field name="file_statistics" type="dict"/>
+      </output_schema>
+    </task>
+
+    <task name="documentation_analysis" priority="medium">
+      <description>Analyze documentation quality and completeness</description>
+      <tool_sequence>
+        <step tool="file_analyzer" method="analyze_files"/>
+        <step tool="llm_analyzer" method="analyze_documentation"/>
+      </tool_sequence>
+      <output_schema>
+        <field name="documentation_quality" type="string"/>
+        <field name="suggestions" type="list"/>
+      </output_schema>
+    </task>
+  </analysis_tasks>
+
+  <output_format>
+    <format>xml</format>
+    <structure>
+      <root_element>repository_report</root_element>
+      <sections>
+        <section name="metadata" include_timestamp="true"/>
+        <section name="repository_overview"/>
+        <section name="documentation_analysis"/>
+      </sections>
+    </structure>
+    <styling>
+      <pretty_print>true</pretty_print>
+    </styling>
+  </output_format>
+
+  <error_handling>
+    <timeout_seconds>180</timeout_seconds>
+    <bash_command_failures>
+      <on_timeout action="skip_and_note"/>
+      <on_permission_error action="log_and_continue"/>
+    </bash_command_failures>
+  </error_handling>
+
+  <tools scope="report">
+    <!-- Using only global tools for this simple example -->
+  </tools>
+</report_definition>
