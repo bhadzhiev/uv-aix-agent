@@ -1,2 +1,0 @@
-[console_scripts]
-start = uv_aix_agent.main:start

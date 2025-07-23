@@ -1,0 +1,5 @@
+# PyCharm optimized .gitignore
+.venv/
+__pycache__/
+.idea/
+*.egg-info/

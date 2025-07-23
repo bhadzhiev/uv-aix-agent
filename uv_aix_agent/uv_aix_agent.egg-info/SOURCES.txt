@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-uv_aix_agent/main.py
-uv_aix_agent.egg-info/PKG-INFO
-uv_aix_agent.egg-info/SOURCES.txt
-uv_aix_agent.egg-info/dependency_links.txt
-uv_aix_agent.egg-info/entry_points.txt
-uv_aix_agent.egg-info/top_level.txt
