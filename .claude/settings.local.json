@@ -15,7 +15,11 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git config:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(uv sync:*)",
+      "Bash(python:*)",
+      "Bash(PYTHONPATH=/Users/bozhidar/PycharmProjects/LlamaIndex/uv_aix_agent uv run python uv_aix_agent/cli.py run --verbose)",
+      "Bash(gh repo create:*)"
     ],
     "deny": []
   }

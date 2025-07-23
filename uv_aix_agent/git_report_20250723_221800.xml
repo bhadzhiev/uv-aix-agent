@@ -2,7 +2,7 @@
 <git_comprehensive_report>
   <metadata>
     <name>Git Comprehensive Report</name>
-    <generated_at>2025-07-23T22:02:38.321988</generated_at>
+    <generated_at>2025-07-23T22:18:00.079003</generated_at>
     <version>1.0</version>
   </metadata>
   <repository_data>
@@ -21,7 +21,7 @@
     <commits_7d>1</commits_7d>
     <authors_7d>0</authors_7d>
     <files_changed_7d>61</files_changed_7d>
-    <working_tree_status>0</working_tree_status>
+    <working_tree_status>87</working_tree_status>
   </repository_data>
   <lifetime_metrics>
     <commits_per_author>1.0</commits_per_author>

@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+"""
+UV AI Agent - Main entry point.
+
+This module provides backward compatibility with the original workflow system
+while the new Typer CLI interface is the recommended way to use the tool.
+
+For new usage, use: uv run python cli.py
+For legacy compatibility: python main.py
+"""
+
 import os
 from dotenv import load_dotenv
 import json
@@ -8,6 +19,28 @@ from pathlib import Path
 load_dotenv()
 
 def start():
+    """
+    Legacy entry point for backward compatibility.
+    
+    Note: The new recommended way to use UV AI Agent is through the Typer CLI:
+    - uv run python cli.py run --help
+    - uv run python cli.py list
+    - uv run python cli.py info
+    """
+    
+    print("🤖 UV AI Agent - Legacy Entry Point")
+    print("📢 Note: Consider using the new CLI interface for better experience:")
+    print("   uv run python cli.py run --verbose")
+    print("   uv run python cli.py list")
+    print("   uv run python cli.py --help")
+    print()
+    
+    # Check if we're in a Git repository
+    if not Path(".git").exists():
+        print("❌ Error: Not in a Git repository!")
+        print("Please run this command from within a Git repository directory.")
+        sys.exit(1)
+    
     # Load configuration from config.json
     try:
         with open('config/app_config.json', 'r') as f:
@@ -32,47 +65,48 @@ def start():
         print("Error: No XML report definitions found in reports/ directories.")
         sys.exit(1)
     
-    # Use the new workflow-based system
-    try:
-        # Try relative imports first (when used as package)
-        from .core.xml_parser import parse_report_definition
-        from .orchestration.git_workflow import create_workflow_from_config
-        from .core.tool_manager import ToolManager
-    except ImportError:
-        # Fall back to absolute imports (when run directly)
-        from core.xml_parser import parse_report_definition
-        from orchestration.git_workflow import create_workflow_from_config
-        from core.tool_manager import ToolManager
-    
     # Use the first XML report found
     report_xml_path = str(xml_reports[0])
-    print(f"Using XML report definition: {report_xml_path}")
+    print(f"📊 Using XML report definition: {report_xml_path}")
     
     try:
-        # Parse report configuration
-        report_config = parse_report_definition(report_xml_path)
+        # Import the CLI functionality and execute a report
+        from cli import collect_git_data, calculate_metrics, generate_warnings, format_xml_report
+        from datetime import datetime
         
-        # Create workflow
-        workflow = create_workflow_from_config(report_config.__dict__)
+        print("🔍 Collecting Git repository data...")
+        data_collection = collect_git_data()
+        raw_data = data_collection['raw_data']
+        errors = data_collection['errors']
         
-        # Setup tools
-        tool_manager = ToolManager()
-        tool_manager.load_report_tools(report_config)
-        tools = tool_manager.get_all_tools(report_config)
+        print("🧮 Calculating derived metrics...")
+        metrics = calculate_metrics(raw_data)
         
-        # Prepare workflow data
-        workflow_data = {
-            'bash_commands': report_config.data_collection.bash_commands,
-            'file_analysis': report_config.data_collection.file_analysis,
-            'analysis_tasks': report_config.analysis_tasks
-        }
+        print("⚠️  Generating contextual warnings...")
+        warnings = generate_warnings(raw_data, metrics['lifetime_metrics'], metrics['recent_metrics'], errors)
         
-        # Execute workflow
-        report_output = workflow.execute(config, tools, workflow_data)
-        print(report_output)
+        print("📝 Formatting XML report...")
+        xml_report = format_xml_report(raw_data, metrics, warnings, errors)
+        
+        # Save to file
+        output_file = f"git_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
+        with open(output_file, 'w') as f:
+            f.write(xml_report)
+        
+        print(f"\n✅ Report generated successfully!")
+        print(f"📁 Saved to: {output_file}")
+        print(f"📊 Warnings generated: {len(warnings)}")
+        
+        # Show summary
+        if warnings:
+            print(f"\n⚠️  Generated Warnings:")
+            for warning in warnings:
+                severity_map = {"high": "🔴", "medium": "🟡", "low": "🔵"}
+                icon = severity_map.get(warning["severity"], "⚪")
+                print(f"   {icon} {warning['severity'].upper()}: {warning['title']}")
         
     except Exception as e:
-        print(f"Error generating XML report: {e}")
+        print(f"❌ Error generating report: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
