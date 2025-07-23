@@ -1,0 +1,51 @@
+[project]
+name = "uv_aix_agent"
+version = "0.1.0"
+description = "Dynamic Git Repository Analysis Tool with AI-powered insights and actionable recommendations"
+authors = [{name = "Bozhidar", email = "b.g.bozhidar.georgiev@gmail.com"}]
+requires-python = ">=3.12"
+dependencies = ["llama_index", "typer", "rich", "python-dotenv", "shellingham"]
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["git", "analysis", "ai", "repository", "cli", "tool"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/bozhidar/uv-aix-agent"
+Repository = "https://github.com/bozhidar/uv-aix-agent"
+Issues = "https://github.com/bozhidar/uv-aix-agent/issues"
+
+[project.scripts]
+uv-agent = "uv_aix_agent.cli:app"
+uv-aix-agent = "uv_aix_agent.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["uv_aix_agent"]
+
+[tool.uv]
+dev-dependencies = [
+    "commitizen>=3.12.0",
+    "pre-commit>=3.6.0",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+version_files = [
+    "pyproject.toml:version",
+]
+tag_format = "v$version"
+bump_message = "bump: release $current_version → $new_version"
+update_changelog_on_bump = true
